@@ -32,7 +32,7 @@ img{max-width:100%}
   color-scheme:dark;
   --bg:#000000; --surface:#131a0f; --surface-2:#23291e; --line:#353a30; --grid:#181817;
   --ink:#f4ece8; --ink-2:#beb8b5; --ink-3:#8e8987;
-  --accent:#8cff00; --accent-ink:#0a1400;
+  --accent:#91ff00; --accent-ink:#0a1400;
   --cy:#38e1f0; --ye:#f5e642;
   --font-display:"Big Shoulders Display","Arial Narrow",system-ui,sans-serif;
   --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -638,7 +638,8 @@ body.rm *{transition:none!important;scroll-behavior:auto!important}
 .bwh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .bwv{display:flex;flex-direction:column;align-items:flex-end}.bwv b{font-size:22px;font-variant-numeric:tabular-nums}.bwv span{font-size:12px;color:var(--ink-3);font-weight:600}
 .bwsv{width:100%;height:auto;display:block}
-.tsws{display:flex;gap:8px;justify-content:space-between}
+.tsws{display:flex;gap:6px}.tsws .tsw{flex:1 1 0;width:auto;min-width:0}
+.grp{margin:14px 0 -4px;font-size:11px;letter-spacing:.14em;color:var(--accent)}
 .tsw{position:relative;width:52px;height:42px;border-radius:10px;border:2px solid;overflow:hidden;flex:0 0 auto}
 .tsw i{position:absolute;left:6px;right:6px;bottom:6px;height:15px;border-radius:4px}
 .tsw b{position:absolute;left:6px;top:7px;width:16px;height:7px;border-radius:3px}
@@ -1202,8 +1203,8 @@ function normActive(a){
 if(S.active)normActive(S.active);
 /* ---------- themes ---------- */
 const THEMES={
-  dg:{n:'Sombre vert nitro',bg:'#000000',surface:'#131a0f',ink:'#f4ece8',accent:'#8cff00'},
-  cg:{n:'Clair vert nitro',bg:'#f3f8ec',surface:'#ffffff',ink:'#141a0d',accent:'#4a9400'},
+  dg:{n:'Sombre vert nitro',bg:'#000000',surface:'#131a0f',ink:'#f4ece8',accent:'#91ff00'},
+  cg:{n:'Clair vert nitro',bg:'#f3f8ec',surface:'#ffffff',ink:'#141a0d',accent:'#90ff00'},
   dr:{n:'Sombre rose',bg:'#12090b',surface:'#1b1013',ink:'#f4ece8',accent:'#ff5c8a'},
   db:{n:'Sombre bleu',bg:'#070c14',surface:'#0e1622',ink:'#e8eef7',accent:'#4da3ff'},
   cr:{n:'Clair rose',bg:'#fbf1f3',surface:'#ffffff',ink:'#2a1318',accent:'#e0245e'},
@@ -1380,7 +1381,7 @@ function persistActive(){
 function savePrefs(){
   ls.set('wk_prefs',S.prefs);
   clearTimeout(prefT);
-  prefT=setTimeout(()=>{if(!S.db)return;const p={ach:S.prefs.ach||[],prCount:S.prefs.prCount||0,goals:S.prefs.goals||[],bar:S.prefs.bar||{},rest:S.prefs.rest,restSec:S.prefs.restSec||0,warmType:S.prefs.warmType||'Marche',warmMin:S.prefs.warmMin||10,warmOn:S.prefs.warmOn!==false,gender:S.prefs.gender||'m',restAuto:S.prefs.restAuto!==false,thumb:!!S.prefs.thumb,cycle:S.prefs.cycle||null,theme:S.prefs.theme||null,synced:S.prefs.synced,bw:S.prefs.bw,bwAt:S.prefs.bwAt||0,bwLog:S.prefs.bwLog||[],progSet:S.prefs.progSet||null,migr:S.prefs.migr||null,name:S.prefs.name||null,profile:S.prefs.profile||null,custom:S.prefs.custom||[],newsSeen:S.prefs.newsSeen||null,unitOv:S.prefs.unitOv||null,intro:S.prefs.intro||null,plan:S.prefs.plan||null};dbq(()=>S.db.doc('state/prefs').set(p))},700);
+  prefT=setTimeout(()=>{if(!S.db)return;const p={ach:S.prefs.ach||[],prCount:S.prefs.prCount||0,goals:S.prefs.goals||[],bar:S.prefs.bar||{},rest:S.prefs.rest,restSec:S.prefs.restSec||0,warmType:S.prefs.warmType||'Marche',warmMin:S.prefs.warmMin||10,warmOn:S.prefs.warmOn!==false,gender:S.prefs.gender||'m',restAuto:S.prefs.restAuto!==false,thumb:!!S.prefs.thumb,cycle:S.prefs.cycle||null,theme:S.themeDraft?JSON.parse(S.themeDraft.prev):(S.prefs.theme||null),synced:S.prefs.synced,bw:S.prefs.bw,bwAt:S.prefs.bwAt||0,bwLog:S.prefs.bwLog||[],progSet:S.prefs.progSet||null,migr:S.prefs.migr||null,name:S.prefs.name||null,profile:S.prefs.profile||null,custom:S.prefs.custom||[],newsSeen:S.prefs.newsSeen||null,unitOv:S.prefs.unitOv||null,intro:S.prefs.intro||null,plan:S.prefs.plan||null};dbq(()=>S.db.doc('state/prefs').set(p))},700);
 }
 function introFlow(){
   return new Promise(res=>{
@@ -1770,6 +1771,12 @@ async function hostedDb(){
   try{const last=localStorage.getItem('wk_uid');if(last!==uid){if(last){Object.keys(localStorage).filter(k=>k.indexOf('wk_')===0).forEach(k=>localStorage.removeItem(k))}localStorage.setItem('wk_uid',uid);if(last){location.reload();return null}}}catch(e){}
   S.user={id:uid,email:(ss.user&&ss.user.email)||''};
   return makeAdapter(uid);
+}
+async function hostedDelete(){
+  S.delBusy=true;S.delMsg='';S.confirm=null;render();
+  try{await sbRest('rpc/delete_account',{method:'POST',body:{}})}
+  catch(e){S.delBusy=false;S.delMsg=/404|PGRST202|function/i.test(String(e.message))?'Suppression indisponible pour l’instant. Réessaie plus tard.':'Échec de la suppression : '+sbMsg(String(e.message).replace(/^API \d+ /,''));render();return}
+  await hostedLogout();
 }
 async function hostedLogout(){
   sbs.set(null);
@@ -2667,17 +2674,29 @@ function goalsHome(){
   const R=buildRecords(S.sessions,true);
   return '<section class="card stack"><h2>Objectifs de l’hiver</h2>'+g.map(x=>{const c=goalCur(x,R),pc=Math.min(100,c/x.t*100),ok=c>=x.t;return '<div class="vb"><div class="vb-l"><span>'+esc(x.n)+'</span><b>'+(ok?'Atteint ✓ · ':'')+fmt(c)+' / '+fmt(x.t)+' '+goalUnit(x)+'</b></div><div class="vb-t"><i style="width:'+pc.toFixed(1)+'%;background:'+(ok?'var(--ye)':'var(--accent)')+'"></i></div></div>'}).join('')+'</section>';
 }
-function setTheme(id){const old=S.prefs.theme||{},b=themeBase();S.prefs.theme={id,custom:old.custom};if(id==='custom'&&!S.prefs.theme.custom){S.prefs.theme.custom={bg:b.bg,surface:b.surface,ink:b.ink,accent:b.accent,from:THEMES[old.id]?old.id:DEF}}applyTheme();savePrefs();render()}
+function themeFrom(){
+  const old=S.prefs.theme||{},b=themeBase();
+  if(!S.themeDraft)S.themeDraft={prev:JSON.stringify(S.prefs.theme||null)};
+  const from=THEMES[old.id]?old.id:(old.id==='custom'&&old.custom&&old.custom.from)||DEF;
+  S.prefs.theme={id:'custom',custom:{bg:b.bg,surface:b.surface,ink:b.ink,accent:b.accent,from}};
+  applyTheme();render()}
+function setTheme(id){
+  if(S.themeDraft){S.prefs.theme=JSON.parse(S.themeDraft.prev)||{};S.themeDraft=null}
+  const old=S.prefs.theme||{};
+  if(id==='custom'&&!old.custom){applyTheme();themeFrom();return}
+  S.prefs.theme={id,custom:old.custom};applyTheme();savePrefs();render()}
 function themePlus(){
   const t=S.prefs.theme||{id:DEF},id=t.id||DEF,cu=Object.assign({},themeBase(),t.custom||{}),fr=THEMES[(t.custom&&t.custom.from)||DEF]||THEMES[DEF];
   const pv=id==='custom'?cu:(THEMES[id]||THEMES[DEF]);
   const prev='<span class="tp" style="background:'+pv.bg+';border-color:'+mixc(pv.bg,pv.ink,.25)+'"><i style="background:'+pv.surface+'"></i><b style="background:'+pv.accent+'"></b></span>';
-  const sw=Object.keys(THEMES).map(k=>{const q=THEMES[k];return '<button class="tsw" data-act="theme" data-id="'+k+'" aria-pressed="'+(k===id)+'" aria-label="'+esc(q.n)+'" style="background:'+q.bg+';border-color:'+(k===id?q.accent:mixc(q.bg,q.ink,.25))+'"><i style="background:'+q.surface+'"></i><b style="background:'+q.accent+'"></b></button>'}).join('');
+  const hc=S.prefs.theme&&S.prefs.theme.custom;
+  const sw=Object.keys(THEMES).map(k=>{const q=THEMES[k];return '<button class="tsw" data-act="theme" data-id="'+k+'" aria-pressed="'+(k===id)+'" aria-label="'+esc(q.n)+'" style="background:'+q.bg+';border-color:'+(k===id?q.accent:mixc(q.bg,q.ink,.25))+'"><i style="background:'+q.surface+'"></i><b style="background:'+q.accent+'"></b></button>'}).join('')+
+   (hc?(()=>{const q=Object.assign({},THEMES[DEF],hc);return '<button class="tsw" data-act="theme" data-id="custom" aria-pressed="'+(id==='custom')+'" aria-label="Mon thème" style="background:'+q.bg+';border-color:'+(id==='custom'?q.accent:mixc(q.bg,q.ink,.25))+'"><i style="background:'+q.surface+'"></i><b style="background:'+q.accent+'"></b></button>'})():'');
   const pk=(k,l)=>{const same=String(cu[k]).toLowerCase()===String(fr[k]).toLowerCase();return '<div class="cpick"><span>'+l+'</span><span class="cr"><input type="color" data-act="theme-c" data-k="'+k+'" value="'+cu[k]+'" aria-label="Couleur : '+l+'"><button data-act="theme-r" data-k="'+k+'" aria-label="Rétablir la couleur d’origine : '+l+'"'+(same?' disabled':'')+'>↺</button></span></div>'};
-  const adv=S.themeAdv||id==='custom'&&S.themeAdv!==false;
-  return '<div class="stack"><div class="tsws">'+sw+'</div>'+
-   '<button class="link" style="align-self:flex-start" data-act="theme-adv" aria-expanded="'+!!adv+'">Avancé : couleurs personnalisées '+(adv?'▴':'▾')+'</button>'+
-   (adv?(id==='custom'?'<div class="cgrid">'+pk('bg','Fond')+pk('surface','Cartes')+pk('ink','Texte')+pk('accent','Accent')+'</div><p class="sub">↺ rétablit la couleur du thème de départ ('+esc(fr.n)+').</p>':'<button class="btn ghost sm" style="align-self:flex-start" data-act="theme" data-id="custom">Partir du thème actuel</button>'):'')+'</div>';
+  const nm=id==='custom'?(S.themeDraft?'Personnalisé (non sauvegardé)':'Mon thème'):(THEMES[id]||THEMES[DEF]).n;
+  return '<section class="card acc open"><div class="acc-h"><span>Thème</span><em>'+esc(nm)+'</em></div><div class="acc-b"><div class="tsws">'+sw+'</div>'+
+   (id==='custom'?'<div class="cgrid">'+pk('bg','Fond')+pk('surface','Cartes')+pk('ink','Texte')+pk('accent','Accent')+'</div><p class="sub">↺ rétablit la couleur du thème de départ ('+esc(fr.n)+').</p><div style="display:flex;gap:8px"><button class="btn sm" data-act="theme-save"'+(S.themeDraft?'':' disabled')+'>'+(S.themeDraft?'Sauvegarder':'Sauvegardé ✓')+'</button><button class="btn ghost sm" data-act="theme-cancel"'+(S.themeDraft?'':' hidden')+'>Annuler</button></div>'
+   :'<button class="btn ghost sm" style="align-self:flex-start" data-act="theme-from">Personnaliser les couleurs</button>')+'</div></section>';
 }
 function achPlus(){
   const have=S.prefs.ach||[];
@@ -3231,14 +3250,18 @@ function viewPlus(){
    '<textarea class="bkta" id="bkin" placeholder="Pour restaurer : colle ici une sauvegarde" aria-label="Sauvegarde à importer"></textarea><div><button class="btn ghost sm" data-act="bk-import">Importer</button></div>';
   const rs='<p class="sub">Efface séances, succès, objectifs et réglages (poids de corps conservé, feuille Google non touchée).</p><div><button class="btn ghost sm" data-act="reset" style="'+(S.confirm==='reset'?'background:var(--accent);color:var(--accent-ink);border-color:var(--accent)':'')+'">'+(S.confirm==='reset'?'Confirmer : tout effacer':'Tout remettre à zéro')+'</button></div>';
   return '<header><p class="fl">Réglages</p><h1 class="disp">Plus</h1></header>'+
+  '<h2 class="grp">Profil</h2>'+
   '<section class="card bwrow"><span>Poids de corps</span><div class="step"><button data-act="bw" data-v="-0.5" aria-label="Moins 0,5 kilo">−</button><output style="min-width:70px">'+fmt(S.prefs.bw)+' kg</output><button data-act="bw" data-v="0.5" aria-label="Plus 0,5 kilo">+</button></div></section>'+
-  accSec('train','Séance','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>Repos automatique après chaque série</span><button class="btn ghost sm" data-act="restauto" aria-pressed="'+(S.prefs.restAuto!==false)+'">'+(S.prefs.restAuto!==false?'Activé':'Désactivé')+'</button></div><div class="row" style="justify-content:space-between;gap:10px"><span>Mode pouce (grosses touches)</span><button class="btn ghost sm" data-act="thumb" aria-pressed="'+!!S.prefs.thumb+'">'+(S.prefs.thumb?'Activé':'Désactivé')+'</button></div></div>')+
-  accSec('account','Compte','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>'+esc((S.user&&S.user.email)||'')+'</span></div><button class="btn" data-act="logout">Se déconnecter</button></div>')+
   accSec('coach','Profil du coach',coachPlus())+
-  accSec('theme','Thème',themePlus())+
-  accSec('anim','Animations','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>Animations</span>'+sg('anim',S.prefs.anim==='on'?'on':'auto',[['auto','Auto'],['on','Toujours']],'Animations')+'</div><p class="sub">'+(rmSys()?(S.prefs.anim==='on'?'Ton appareil demande de réduire les animations, mais « Toujours » les garde.':'Ton appareil demande de réduire les animations : elles sont coupées. Choisis « Toujours » pour les voir.'):'Auto suit le réglage de ton appareil. Il est sur « animations normales ».')+'</p></div>')+
   accSec('goals','Objectifs',goalsPlus(),(S.prefs.goals||[]).length?String((S.prefs.goals||[]).length):'')+
   accSec('ach','Succès',achPlus(),have+' / '+ACH.length)+
+  '<h2 class="grp">Entraînement</h2>'+
+  accSec('train','Séance','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>Repos automatique après chaque série</span><button class="btn ghost sm" data-act="restauto" aria-pressed="'+(S.prefs.restAuto!==false)+'">'+(S.prefs.restAuto!==false?'Activé':'Désactivé')+'</button></div><div class="row" style="justify-content:space-between;gap:10px"><span>Mode pouce (grosses touches)</span><button class="btn ghost sm" data-act="thumb" aria-pressed="'+!!S.prefs.thumb+'">'+(S.prefs.thumb?'Activé':'Désactivé')+'</button></div></div>')+
+  '<h2 class="grp">Apparence</h2>'+
+  themePlus()+
+  accSec('anim','Animations','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>Animations</span>'+sg('anim',S.prefs.anim==='on'?'on':'auto',[['auto','Auto'],['on','Toujours']],'Animations')+'</div><p class="sub">'+(rmSys()?(S.prefs.anim==='on'?'Ton appareil demande de réduire les animations, mais « Toujours » les garde.':'Ton appareil demande de réduire les animations : elles sont coupées. Choisis « Toujours » pour les voir.'):'Auto suit le réglage de ton appareil. Il est sur « animations normales ».')+'</p></div>')+
+  '<h2 class="grp">Compte et données</h2>'+
+  accSec('account','Compte','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>'+esc((S.user&&S.user.email)||'')+'</span></div><button class="btn" data-act="logout">Se déconnecter</button><div class="stack" style="margin-top:6px"><p class="sub">Supprime définitivement ton compte et toutes tes données (séances, records, réglages). Irréversible.</p>'+(S.delMsg?'<p class="note err">'+esc(S.delMsg)+'</p>':'')+'<div><button class="btn ghost sm" data-act="delacc" style="'+(S.confirm==='delacc'?'background:var(--accent);color:var(--accent-ink);border-color:var(--accent)':'')+'"'+(S.delBusy?' disabled':'')+'>'+(S.delBusy?'Suppression…':S.confirm==='delacc'?'Confirmer : supprimer mon compte':'Supprimer mon compte')+'</button></div></div></div>')+
   accSec('bk','Sauvegarde',bk)+
   accSec('rs','Remise à zéro',rs)+
   '<p class="sub" style="text-align:center">Version '+APPV.replace('v','')+' · '+S.sessions.length+' séance'+(S.sessions.length>1?'s':'')+' enregistrée'+(S.sessions.length>1?'s':'')+(S.dbState==='ok'?' · stockage en ligne actif':' · données sur cet appareil')+'</p>';
@@ -3455,6 +3478,7 @@ document.addEventListener('click',ev=>{
     case 'range':S.range=+t.dataset.v;render();break;
     case 'ptab':S.progTab=t.dataset.v;render();scrTop();break;
     case 'logout':hostedLogout();break;
+    case 'delacc':if(S.confirm==='delacc')hostedDelete();else{S.delMsg='';ask('delacc')}break;
     case 'anim':S.prefs.anim=t.dataset.v;savePrefs();render();break;
     case 'metric':S.metric=t.dataset.v;render();break;
     case 'edit':{const x=S.sessions.find(q=>q.id===t.dataset.id);if(x)openEdit(x);break}
@@ -3477,8 +3501,10 @@ document.addEventListener('click',ev=>{
     case 'wu-min':if(a&&a.warm){a.warm.min=Math.min(90,Math.max(1,a.warm.min+ +t.dataset.v));persistActive();render()}break;
     case 'mood':if(a){a.mood=a.mood===t.dataset.v?'':t.dataset.v;applyMood(a);persistActive();render()}break;
     case 'theme':setTheme(t.dataset.id);break
-    case 'theme-adv':S.themeAdv=!(S.themeAdv||(S.prefs.theme||{}).id==='custom'&&S.themeAdv!==false);render();break
-    case 'theme-r':{const th=S.prefs.theme;if(th&&th.id==='custom'&&th.custom){const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];th.custom=Object.assign({},th.custom,{[t.dataset.k]:fr[t.dataset.k]});applyTheme();savePrefs();render()}break}
+    case 'theme-from':themeFrom();break
+    case 'theme-save':S.themeDraft=null;savePrefs();render();break
+    case 'theme-cancel':if(S.themeDraft){S.prefs.theme=JSON.parse(S.themeDraft.prev);S.themeDraft=null;applyTheme();render()}break
+    case 'theme-r':{const th=S.prefs.theme;if(th&&th.id==='custom'&&th.custom){if(!S.themeDraft)S.themeDraft={prev:JSON.stringify(th)};const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];th.custom=Object.assign({},th.custom,{[t.dataset.k]:fr[t.dataset.k]});applyTheme();render()}break}
     case 'goal-step':{const g=(S.prefs.goals||[])[i];if(g){g.t=Math.max(1,Math.round((g.t+ +t.dataset.v*(g.u==='kg'?2.5:1))*100)/100);savePrefs();render()}break}
     case 'goal-del':{const k='gdel'+i;if(S.confirm===k){S.prefs.goals.splice(i,1);S.confirm=null;savePrefs();render()}else ask(k);break}
     case 'goal-add':goalAdd();break;
@@ -3539,7 +3565,7 @@ document.addEventListener('input',ev=>{
 });
 document.addEventListener('input',ev=>{
   const t=ev.target;
-  if(t&&t.dataset&&t.dataset.act==='theme-c'){const th=S.prefs.theme;if(th&&th.id==='custom'){th.custom=Object.assign({},th.custom,{[t.dataset.k]:t.value});applyTheme();savePrefs();const rb=t.parentNode&&t.parentNode.querySelector('[data-act=theme-r]');if(rb){const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];rb.disabled=String(t.value).toLowerCase()===String(fr[t.dataset.k]).toLowerCase()}}}
+  if(t&&t.dataset&&t.dataset.act==='theme-c'){const th=S.prefs.theme;if(th&&th.id==='custom'){if(!S.themeDraft)S.themeDraft={prev:JSON.stringify(th)};th.custom=Object.assign({},th.custom,{[t.dataset.k]:t.value});applyTheme();{const sv=document.querySelector('[data-act=theme-save]');if(sv){sv.disabled=false;sv.textContent='Sauvegarder'}const cn=document.querySelector('[data-act=theme-cancel]');if(cn)cn.hidden=false}const rb=t.parentNode&&t.parentNode.querySelector('[data-act=theme-r]');if(rb){const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];rb.disabled=String(t.value).toLowerCase()===String(fr[t.dataset.k]).toLowerCase()}}}
 });
 document.addEventListener('input',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
