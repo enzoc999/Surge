@@ -1529,7 +1529,7 @@ var PL=(()=>{
   const accept=ty=>ty==='upper'?['upper','push','pull']:ty==='push'?['push','upper']:ty==='pull'?['pull','upper']:[ty];
   const score=(c,goal,lv,lastF,ty)=>{
     const tgt=lv==='d'?40:goal==='force'?65:55;
-    return (WF[goal][c.f]||0)+(WO[goal][c.o]||0)+(c.f===lastF?3:0)+(c.ty===ty?3:0)+(c.lv===lv?0:-5)-Math.abs(c.t-tgt)/15;
+    return (WF[goal][c.f]!=null?WF[goal][c.f]:(goal==='mass'||goal==='force'?-6:0))+(WO[goal][c.o]||0)+(c.f===lastF?3:0)+(c.ty===ty?3:0)+(c.lv===lv?0:-5)-Math.abs(c.t-tgt)/15;
   };
   const near=lv=>lv==='d'?['d','i']:lv==='a'?['a','i']:['i','d','a'];
   const cands=(ty,goal,lv,used,lastF)=>{
