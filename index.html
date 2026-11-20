@@ -1385,7 +1385,7 @@ function savePrefs(){
   clearTimeout(prefT);
   prefT=setTimeout(()=>{if(!S.db)return;const p={ach:S.prefs.ach||[],prCount:S.prefs.prCount||0,goals:S.prefs.goals||[],bar:S.prefs.bar||{},rest:S.prefs.rest,restSec:S.prefs.restSec||0,warmType:S.prefs.warmType||'Marche',warmMin:S.prefs.warmMin||10,warmOn:S.prefs.warmOn!==false,gender:S.prefs.gender||'m',restAuto:S.prefs.restAuto!==false,thumb:!!S.prefs.thumb,cycle:S.prefs.cycle||null,theme:S.themeDraft?JSON.parse(S.themeDraft.prev):(S.prefs.theme||null),synced:S.prefs.synced,bw:S.prefs.bw,bwAt:S.prefs.bwAt||0,bwLog:S.prefs.bwLog||[],progSet:S.prefs.progSet||null,migr:S.prefs.migr||null,name:S.prefs.name||null,profile:S.prefs.profile||null,custom:S.prefs.custom||[],newsSeen:S.prefs.newsSeen||null,unitOv:S.prefs.unitOv||null,intro:S.prefs.intro||null,plan:S.prefs.plan||null};dbq(()=>S.db.doc('state/prefs').set(p))},700);
 }
-function introFlow(){
+function introFlow(post){
   return new Promise(res=>{
     const A={name:'',goal:'',lv:'',days:0,sel:[]};
     const LV=[['d','Débutant','Moins d’un an',1],['i','Intermédiaire','1 à 3 ans',2],['a','Expérimenté','3 ans et plus',3]];
@@ -1419,7 +1419,7 @@ function introFlow(){
       let b='',f='';
       if(i===0){
         b='<div class="iw"><h1 class="ilogo">SURGE</h1><p class="isub">Chaque série compte !</p></div>';
-        f='<button class="abtn" data-i="next">Commencer</button><button class="alink" data-i="login">J’ai déjà un compte</button>';
+        f='<button class="abtn" data-i="next">Commencer</button>'+(post?'':'<button class="alink" data-i="login">J’ai déjà un compte</button>');
       }else if(i===1){
         b='<h2 class="iq">Comment tu t’appelles ?</h2><input id="i-name" class="iin" type="text" maxlength="20" autocomplete="given-name" autocapitalize="words" placeholder="Ton prénom" value="'+esc(A.name)+'">';
         f='<button class="abtn" data-i="next" id="i-ok"'+(A.name.trim()?'':' disabled')+'>Continuer</button>';
@@ -1471,7 +1471,7 @@ function introFlow(){
     }
     function btn(){
       const f=el.querySelector('#ibt');if(!f||f.firstChild)return;
-      f.innerHTML='<button class="abtn" data-i="done">Créer mon compte</button>';
+      f.innerHTML='<button class="abtn" data-i="done">'+(post?'Continuer':'Créer mon compte')+'</button>';
       tween(420,p=>{f.style.opacity=p.toFixed(3)});
     }
     el.addEventListener('click',e=>{
@@ -1868,6 +1868,7 @@ async function initDb(){
     if(ad.exists){const r=(ad.data()||{}).data;
       if(r&&r.exercises&&(!S.active||(r.updatedAt||0)>(S.active.updatedAt||0))){dosFix([{exercises:r.exercises}]);S.active=normActive(r);ls.set('wk_active',r);S.openEx=firstOpen()}}
     S.prefsLoaded=true;if(S.dbState==='ok')migrateReal();
+    try{if(S.dbState==='ok'&&!S.guest&&!localStorage.getItem('wk_intro')&&!S.prefs.intro&&!S.prefs.progSet&&!S.sessions.length)await introFlow(true)}catch(e){}
     try{const iv=JSON.parse(localStorage.getItem('wk_intro')||'null');if(iv){if(iv.name&&!S.prefs.name)S.prefs.name=iv.name;S.prefs.intro=iv;if(!S.prefs.progSet&&!S.sessions.length&&iv.goal&&iv.sel&&iv.sel.length){S.prefs.plan=PL.gen(iv.goal,iv.lv||'d',iv.sel);S.prefs.progSet='plan';S.prefs.migr='r1';S.needProg=false}savePrefs();localStorage.removeItem('wk_intro')}}catch(e){}
     if(!S.prefs.progSet&&!S.sessions.length)S.needProg=true;
     softRender();
