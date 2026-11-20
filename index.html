@@ -886,6 +886,8 @@ body.rm .hero-body svg,body.rm #restbar.low .time,body.rm #app.enter .tl,body.rm
 .aerr{min-height:20px;color:#ff8a8a;font-size:13.5px}
 .abtn{height:52px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:16px}
 .abtn:disabled{opacity:.6}
+.abtn.ag{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.aor{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:12px;text-transform:uppercase;letter-spacing:.1em}.aor::before,.aor::after{content:"";flex:1;height:1px;background:var(--line)}
 .aerr.ok{color:var(--ink)}
 .alink{background:none;border:0;color:var(--ink-2);font-size:14px;padding:8px;text-decoration:underline}
 
@@ -1672,8 +1674,9 @@ function authScreen(m0,notice){
     const aIn=()=>{const f=el.querySelector('form');if(!f)return;const t0=performance.now(),c=rmSys();f.style.opacity=0;const st=n=>{const p=Math.min(1,(n-t0)/420),e=1-Math.pow(1-p,3);f.style.opacity=e.toFixed(3);f.style.transform=c?'none':'translate3d(0,'+(16*(1-e)).toFixed(1)+'px,0)';if(p<1&&el.isConnected)requestAnimationFrame(st)};requestAnimationFrame(st)};
     const aOut=cb=>{const t0=performance.now();const st=n=>{const p=Math.min(1,(n-t0)/260);el.style.opacity=(1-p).toFixed(3);if(p<1)requestAnimationFrame(st);else cb()};requestAnimationFrame(st)};
     const SUB={in:'Connecte-toi pour retrouver tes séances.',up:'Crée ton compte pour sauvegarder tes séances.',forgot:'Entre ton e-mail, on t’envoie un lien pour choisir un nouveau mot de passe.'};
+    const GBTN=mode=>mode==='forgot'?'':'<button class="abtn ag" type="button" id="a-go"><svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.5-4.2 7-10.3 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 12-2.1 16-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continuer avec Google</button><div class="aor"><span>ou</span></div>';
     const paint=(msg,ok)=>{
-      el.innerHTML='<form class="aform" novalidate><h1>SURGE</h1><p class="asub">'+SUB[mode]+'</p>'+
+      el.innerHTML='<form class="aform" novalidate><h1>SURGE</h1><p class="asub">'+SUB[mode]+'</p>'+GBTN(mode)+
         '<input id="a-mail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="E-mail" required value="'+esc(em)+'">'+
         (mode==='forgot'?'':'<input id="a-pass" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="Mot de passe (6 caractères min.)" required>')+
         '<div class="aerr'+(ok?' ok':'')+'" id="a-err" role="alert">'+esc(msg||'')+'</div>'+
@@ -1684,6 +1687,7 @@ function authScreen(m0,notice){
       mi.oninput=()=>{em=mi.value};
       el.querySelector('h1').onclick=()=>{const t=Date.now();gn=t-gt<1500?gn+1:1;gt=t;if(gn>=5){el.remove();res({guest:true})}};
       el.querySelector('#a-sw').onclick=()=>{mode=mode==='up'?'in':mode==='in'?'up':'in';paint();aIn()};
+      const go=el.querySelector('#a-go');if(go)go.onclick=()=>{try{localStorage.setItem('sb_oauth','1')}catch(e){}location.href=SB_URL+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(location.origin+location.pathname)};
       const fg=el.querySelector('#a-fg');if(fg)fg.onclick=()=>{mode='forgot';paint();aIn()};
       f.onsubmit=async ev=>{
         ev.preventDefault();if(busy)return;
@@ -1759,12 +1763,16 @@ function makeAdapter(uid){
   return{doc,collection};
 }
 async function hostedDb(){
-  let ss=null,rec=null,recErr='';
-  try{const h=location.hash||'';
+  let ss=null,rec=null,recErr='',oa=null;
+  try{const h=location.hash||'';const wasO=localStorage.getItem('sb_oauth');
+    if(/access_token=/.test(h)&&!/type=recovery/.test(h)){const q=new URLSearchParams(h.slice(1));oa={access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_in:+q.get('expires_in')||3600};history.replaceState(null,'',location.pathname+location.search);localStorage.removeItem('sb_oauth')}
+    else if(wasO&&/error/.test(h+location.search)){recErr='Connexion Google annulée ou impossible.';localStorage.removeItem('sb_oauth');history.replaceState(null,'',location.pathname)}
     if(/type=recovery/.test(h)&&/access_token=/.test(h)){const q=new URLSearchParams(h.slice(1));rec={access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_in:q.get('expires_in')};history.replaceState(null,'',location.pathname+location.search)}
-    else if(/error_code=|error=access_denied/.test(h)){recErr='Lien expiré ou déjà utilisé. Redemande-en un.';history.replaceState(null,'',location.pathname+location.search)}
+    else if(!recErr&&/error_code=|error=access_denied/.test(h)){recErr='Lien expiré ou déjà utilisé. Redemande-en un.';history.replaceState(null,'',location.pathname+location.search)}
   }catch(e){}
-  if(rec)ss=await newPassScreen(rec);
+  if(oa){try{const u=await fetch(SB_URL+'/auth/v1/user',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+oa.access_token}}).then(x=>x.json());ss=sbFix(Object.assign({},oa,{user:u}));if(ss&&ss.user&&ss.user.id)sbs.set(ss);else ss=null}catch(e){ss=null}}
+  if(ss){}
+  else if(rec)ss=await newPassScreen(rec);
   else{ss=sbs.get();if(ss){const t=await sbToken();if(!t)ss=null}}
   if(!ss){const ia=recErr?null:await introFlow();ss=await authScreen(recErr?'forgot':(ia?'up':'in'),recErr);if(ss&&ss.guest){S.guest=true;try{localStorage.setItem('wk_uid','guest')}catch(e){}return null}}
   const uid=ss.user&&ss.user.id;if(!uid)return null;
