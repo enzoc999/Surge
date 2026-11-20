@@ -1679,7 +1679,7 @@ function authScreen(m0,notice){
         '<div class="aerr'+(ok?' ok':'')+'" id="a-err" role="alert">'+esc(msg||'')+'</div>'+
         '<button class="abtn" type="submit">'+(mode==='in'?'Se connecter':mode==='up'?'Créer mon compte':'Envoyer le lien')+'</button>'+
         (mode==='in'?'<button class="alink" type="button" id="a-fg">Mot de passe oublié ?</button>':'')+
-        '<button class="alink" type="button" id="a-sw">'+(mode==='in'?'Pas de compte ? Créer un compte':mode==='up'?'Déjà un compte ? Se connecter':'Retour à la connexion')+'</button></form>';
+        '<button class="alink" type="button" id="a-sw">'+(mode==='in'?'Pas de compte ? Créer un compte':mode==='up'?'Déjà un compte ? Se connecter':'Retour à la connexion')+'</button>'+(mode==='forgot'?'':'<a class="alink" style="text-align:center;font-size:12px;color:var(--ink-3)" href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a>')+'</form>';
       const f=el.querySelector('form'),er=el.querySelector('#a-err'),mi=el.querySelector('#a-mail');
       mi.oninput=()=>{em=mi.value};
       el.querySelector('h1').onclick=()=>{const t=Date.now();gn=t-gt<1500?gn+1:1;gt=t;if(gn>=5){el.remove();res({guest:true})}};
@@ -1771,6 +1771,31 @@ async function hostedDb(){
   try{const last=localStorage.getItem('wk_uid');if(last!==uid){if(last){Object.keys(localStorage).filter(k=>k.indexOf('wk_')===0).forEach(k=>localStorage.removeItem(k))}localStorage.setItem('wk_uid',uid);if(last){location.reload();return null}}}catch(e){}
   S.user={id:uid,email:(ss.user&&ss.user.email)||''};
   return makeAdapter(uid);
+}
+const WF_KEY='9c0dce9b-ba03-4d4f-a674-7aa7d49ad2f0';
+const FB_T=[['idee','Idée'],['bug','Bug'],['autre','Autre']];
+function fbBody(){
+  const f=S.fb||{type:'idee'};
+  if(f.done)return '<div class="stack"><p>Merci ! Ton message est bien parti.</p><div><button class="btn ghost sm" data-act="fb-again">Envoyer un autre message</button></div></div>';
+  return '<div class="stack"><div class="row wrapx" style="gap:8px">'+FB_T.map(([v,l])=>'<button class="tcb" data-act="fb-type" data-v="'+v+'" aria-pressed="'+((f.type||'idee')===v)+'">'+l+'</button>').join('')+'</div>'+
+   '<textarea class="bkta" id="fb-msg" placeholder="Ton idée, un bug, une remarque…" aria-label="Ton message" maxlength="2000">'+esc(f.msg||'')+'</textarea>'+
+   (f.err?'<p class="note err">'+esc(f.err)+'</p>':'')+
+   '<p class="sub">Ta réponse arrivera sur '+esc((S.user&&S.user.email)||'ton e-mail')+'.</p>'+
+   '<div><button class="btn sm" data-act="fb-send"'+(f.busy?' disabled':'')+'>'+(f.busy?'Envoi…':'Envoyer')+'</button></div></div>';
+}
+async function hostedFeedback(){
+  const msg=((document.getElementById('fb-msg')||{}).value||'').trim();
+  S.fb=Object.assign({type:'idee'},S.fb||{},{msg});
+  if(msg.length<5){S.fb.err='Écris au moins quelques mots.';render();return}
+  if(!WF_KEY||WF_KEY.indexOf('__')===0){S.fb.err='Envoi bientôt disponible.';render();return}
+  S.fb.busy=true;S.fb.err='';render();
+  try{
+    const lab=(FB_T.find(x=>x[0]===S.fb.type)||['','Message'])[1];
+    const r=await fetch('https://api.web3forms.com/submit',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({access_key:WF_KEY,subject:'Surge · '+lab,from_name:'Surge',email:(S.user&&S.user.email)||'',message:msg,type:lab,version:APPV})});
+    const j=await r.json();if(!j.success)throw new Error('x');
+    S.fb={type:S.fb.type,done:true};
+  }catch(e){S.fb.busy=false;S.fb.err='Envoi impossible pour le moment. Réessaie plus tard.'}
+  render();
 }
 async function hostedDelete(){
   S.delBusy=true;S.delMsg='';S.confirm=null;render();
@@ -3261,7 +3286,8 @@ function viewPlus(){
   themePlus()+
   accSec('anim','Animations','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>Animations</span>'+sg('anim',S.prefs.anim==='on'?'on':'auto',[['auto','Auto'],['on','Toujours']],'Animations')+'</div><p class="sub">'+(rmSys()?(S.prefs.anim==='on'?'Ton appareil demande de réduire les animations, mais « Toujours » les garde.':'Ton appareil demande de réduire les animations : elles sont coupées. Choisis « Toujours » pour les voir.'):'Auto suit le réglage de ton appareil. Il est sur « animations normales ».')+'</p></div>')+
   '<h2 class="grp">Compte et données</h2>'+
-  accSec('account','Compte','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>'+esc((S.user&&S.user.email)||'')+'</span></div><button class="btn" data-act="logout">Se déconnecter</button><div class="stack" style="margin-top:6px"><p class="sub">Supprime définitivement ton compte et toutes tes données (séances, records, réglages). Irréversible.</p>'+(S.delMsg?'<p class="note err">'+esc(S.delMsg)+'</p>':'')+'<div><button class="btn ghost sm" data-act="delacc" style="'+(S.confirm==='delacc'?'background:var(--accent);color:var(--accent-ink);border-color:var(--accent)':'')+'"'+(S.delBusy?' disabled':'')+'>'+(S.delBusy?'Suppression…':S.confirm==='delacc'?'Confirmer : supprimer mon compte':'Supprimer mon compte')+'</button></div></div></div>')+
+  accSec('account','Compte','<div class="stack"><div class="row" style="justify-content:space-between;gap:10px"><span>'+esc((S.user&&S.user.email)||'')+'</span></div><button class="btn" data-act="logout">Se déconnecter</button><a class="link" style="align-self:flex-start" href="confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a><div class="stack" style="margin-top:6px"><p class="sub">Supprime définitivement ton compte et toutes tes données (séances, records, réglages). Irréversible.</p>'+(S.delMsg?'<p class="note err">'+esc(S.delMsg)+'</p>':'')+'<div><button class="btn ghost sm" data-act="delacc" style="'+(S.confirm==='delacc'?'background:var(--accent);color:var(--accent-ink);border-color:var(--accent)':'')+'"'+(S.delBusy?' disabled':'')+'>'+(S.delBusy?'Suppression…':S.confirm==='delacc'?'Confirmer : supprimer mon compte':'Supprimer mon compte')+'</button></div></div></div>')+
+  accSec('feedback','Suggérer une amélioration',fbBody())+
   accSec('bk','Sauvegarde',bk)+
   accSec('rs','Remise à zéro',rs)+
   '<p class="sub" style="text-align:center">Version '+APPV.replace('v','')+' · '+S.sessions.length+' séance'+(S.sessions.length>1?'s':'')+' enregistrée'+(S.sessions.length>1?'s':'')+(S.dbState==='ok'?' · stockage en ligne actif':' · données sur cet appareil')+'</p>';
@@ -3479,6 +3505,9 @@ document.addEventListener('click',ev=>{
     case 'ptab':S.progTab=t.dataset.v;render();scrTop();break;
     case 'logout':hostedLogout();break;
     case 'delacc':if(S.confirm==='delacc')hostedDelete();else{S.delMsg='';ask('delacc')}break;
+    case 'fb-type':S.fb=Object.assign(S.fb||{},{type:t.dataset.v,msg:(document.getElementById('fb-msg')||{}).value||''});render();break;
+    case 'fb-send':hostedFeedback();break;
+    case 'fb-again':S.fb={type:'idee'};render();break;
     case 'anim':S.prefs.anim=t.dataset.v;savePrefs();render();break;
     case 'metric':S.metric=t.dataset.v;render();break;
     case 'edit':{const x=S.sessions.find(q=>q.id===t.dataset.id);if(x)openEdit(x);break}
