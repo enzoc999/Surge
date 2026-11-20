@@ -1869,7 +1869,7 @@ async function initDb(){
       if(r&&r.exercises&&(!S.active||(r.updatedAt||0)>(S.active.updatedAt||0))){dosFix([{exercises:r.exercises}]);S.active=normActive(r);ls.set('wk_active',r);S.openEx=firstOpen()}}
     S.prefsLoaded=true;if(S.dbState==='ok')migrateReal();
     try{if(S.dbState==='ok'&&!S.guest&&!localStorage.getItem('wk_intro')&&!S.prefs.intro&&!S.prefs.progSet&&!S.sessions.length)await introFlow(true)}catch(e){}
-    try{const iv=JSON.parse(localStorage.getItem('wk_intro')||'null');if(iv){if(iv.name&&!S.prefs.name)S.prefs.name=iv.name;S.prefs.intro=iv;if(!S.prefs.progSet&&!S.sessions.length&&iv.goal&&iv.sel&&iv.sel.length){S.prefs.plan=PL.gen(iv.goal,iv.lv||'d',iv.sel);S.prefs.progSet='plan';S.prefs.migr='r1';S.needProg=false}savePrefs();localStorage.removeItem('wk_intro')}}catch(e){}
+    try{const iv=JSON.parse(localStorage.getItem('wk_intro')||'null');if(iv){if(iv.name&&!S.prefs.name)S.prefs.name=iv.name;S.prefs.intro=iv;if(!S.prefs.progSet&&!S.sessions.length&&iv.goal&&iv.sel&&iv.sel.length){S.prefs.plan=PL.gen(iv.goal,iv.lv||'d',iv.sel);S.prefs.progSet='plan';S.prefs.migr='r1';S.needProg=false;setTimeout(()=>{try{splash()}catch(e){}},300)}savePrefs();localStorage.removeItem('wk_intro')}}catch(e){}
     if(!S.prefs.progSet&&!S.sessions.length)S.needProg=true;
     softRender();
   }catch(e){S.dbState='local';softRender()}
