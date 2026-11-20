@@ -5,7 +5,7 @@
 <script>["gesturestart","gesturechange","gestureend"].forEach(function(e){document.addEventListener(e,function(x){x.preventDefault()})});document.addEventListener("touchmove",function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false})</script>
 <style>html{touch-action:manipulation}</style>
 <title>Surge</title>
-<meta name="theme-color" content="#12090b">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -15,7 +15,7 @@
 <link rel="icon" href="icon-192.png">
 <style>
 :root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html{background:#12090b}
+html{background:#000000}
 body{margin:0;font:14px system-ui,sans-serif}
 img{max-width:100%}
 [hidden]{display:none!important}
@@ -30,9 +30,9 @@ img{max-width:100%}
    Single deliberate dark look: wine-black ground, rose accent; cyan and yellow only as rarity colours. */
 :root{
   color-scheme:dark;
-  --bg:#12090b; --surface:#1b1013; --surface-2:#271619; --line:#3a2428; --grid:#2b1a1e;
-  --ink:#f4ece8; --ink-2:#cdbcb7; --ink-3:#9a8682;
-  --accent:#ff5c8a; --accent-ink:#1c0610;
+  --bg:#000000; --surface:#131a0f; --surface-2:#23291e; --line:#353a30; --grid:#181817;
+  --ink:#f4ece8; --ink-2:#beb8b5; --ink-3:#8e8987;
+  --accent:#8cff00; --accent-ink:#0a1400;
   --cy:#38e1f0; --ye:#f5e642;
   --font-display:"Big Shoulders Display","Arial Narrow",system-ui,sans-serif;
   --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -253,9 +253,9 @@ body.rm #ssfx.on,body.rm .ssb2,body.rm .sst i,body.rm .sss,body.rm .ssl,body.rm 
 .hud-c:first-child{border-left:0}
 .hud-c .k{font-size:10.5px;color:var(--ink-3)}
 .hud-c .v{font-family:var(--font-display);font-weight:800;font-size:34px;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums}
-.hud-c .v.hot{color:var(--accent);text-shadow:0 0 16px rgba(255,92,138,.5)}
+.hud-c .v.hot{color:var(--accent);text-shadow:0 0 16px color-mix(in srgb,var(--accent) 50%,transparent)}
 .hud-c .v small{font-size:16px;color:var(--ink-3);font-weight:700}
-.cdh p.mono{color:var(--accent);font-size:12px;text-shadow:0 0 12px rgba(255,92,138,.45)}
+.cdh p.mono{color:var(--accent);font-size:12px;text-shadow:0 0 12px color-mix(in srgb,var(--accent) 45%,transparent)}
 .fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
 .fchips::-webkit-scrollbar{display:none}
 .mchip{flex:0 0 auto;height:36px;padding:0 13px;border-radius:8px;border:1px solid color-mix(in srgb,var(--m,#9a8682) 40%,var(--line));font-family:var(--font-mono);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--m,var(--ink-2))}
@@ -340,7 +340,7 @@ body.rm #ssfx.on,body.rm .ssb2,body.rm .sst i,body.rm .sss,body.rm .ssl,body.rm 
 .chart .endd{fill:var(--accent);stroke:var(--surface);stroke-width:2}
 .chart .xh{stroke:var(--ink-3);stroke-width:1}
 .chart .hit{fill:transparent;outline:none}
-.chart .hit:focus-visible{fill:rgba(255,92,138,.12)}
+.chart .hit:focus-visible{fill:color-mix(in srgb,var(--accent) 12%,transparent)}
 .tt{position:absolute;top:-4px;transform:translateX(-50%);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;pointer-events:none;display:none;z-index:5;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.4)}
 .tt .a{font-size:12px;color:var(--ink-3)}
 .tt .b{font-weight:700;font-size:15px;display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
@@ -638,7 +638,7 @@ body.rm *{transition:none!important;scroll-behavior:auto!important}
 .bwh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .bwv{display:flex;flex-direction:column;align-items:flex-end}.bwv b{font-size:22px;font-variant-numeric:tabular-nums}.bwv span{font-size:12px;color:var(--ink-3);font-weight:600}
 .bwsv{width:100%;height:auto;display:block}
-.tsws{display:flex;gap:12px}
+.tsws{display:flex;gap:8px;justify-content:space-between}
 .tsw{position:relative;width:52px;height:42px;border-radius:10px;border:2px solid;overflow:hidden;flex:0 0 auto}
 .tsw i{position:absolute;left:6px;right:6px;bottom:6px;height:15px;border-radius:4px}
 .tsw b{position:absolute;left:6px;top:7px;width:16px;height:7px;border-radius:3px}
@@ -1202,6 +1202,8 @@ function normActive(a){
 if(S.active)normActive(S.active);
 /* ---------- themes ---------- */
 const THEMES={
+  dg:{n:'Sombre vert nitro',bg:'#000000',surface:'#131a0f',ink:'#f4ece8',accent:'#8cff00'},
+  cg:{n:'Clair vert nitro',bg:'#f3f8ec',surface:'#ffffff',ink:'#141a0d',accent:'#4a9400'},
   dr:{n:'Sombre rose',bg:'#12090b',surface:'#1b1013',ink:'#f4ece8',accent:'#ff5c8a'},
   db:{n:'Sombre bleu',bg:'#070c14',surface:'#0e1622',ink:'#e8eef7',accent:'#4da3ff'},
   cr:{n:'Clair rose',bg:'#fbf1f3',surface:'#ffffff',ink:'#2a1318',accent:'#e0245e'},
@@ -1212,12 +1214,13 @@ const mixc=(a,b,t)=>{const x=hex2(a),y=hex2(b);return '#'+x.map((v,i)=>Math.roun
 const lum=h=>{const [r,g,b]=hex2(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b};
 const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
 let LIGHT=false;
-function themeBase(){const t=S.prefs.theme||{};if(t.id==='custom'&&t.custom)return Object.assign({},THEMES.dr,t.custom);return THEMES[t.id]||THEMES.dr}
+let DEF='dg';
+function themeBase(){const t=S.prefs.theme||{};if(t.id==='custom'&&t.custom)return Object.assign({},THEMES[DEF],t.custom);return THEMES[t.id]||THEMES[DEF]}
 function applyTheme(){
   try{
     const t=S.prefs.theme||{},b=themeBase(),st=document.documentElement.style;
     const keys=['--bg','--surface','--ink','--accent','--surface-2','--line','--grid','--ink-2','--ink-3','--accent-ink','--cy','--ye'];
-    if(!t.id||t.id==='dr'){LIGHT=false;keys.forEach(k=>st.removeProperty(k));st.colorScheme='dark';return}
+    if(!t.id||t.id==='dg'){LIGHT=false;keys.forEach(k=>st.removeProperty(k));st.colorScheme='dark';return}
     LIGHT=lum(b.bg)>.4;
     const set=(k,v)=>st.setProperty(k,v);
     set('--bg',b.bg);set('--surface',b.surface);set('--ink',b.ink);set('--accent',b.accent);
@@ -1657,6 +1660,8 @@ function sbMsg(m){
   if(/rate limit|too many/i.test(m))return 'Trop d’essais, réessaie dans quelques minutes.';
   if(/failed to fetch|network/i.test(m))return 'Pas de connexion internet.';
   if(/confirm/i.test(m))return 'Confirme ton e-mail avant de te connecter.';
+  if(/different from the old/i.test(m))return 'Choisis un mot de passe différent de l’ancien.';
+  if(/jwt|session missing|token.*expired|expired.*token/i.test(m))return 'Lien expiré. Redemande-en un depuis la connexion.';
   return m||'Erreur inconnue.';
 }
 function authScreen(m0,notice){
@@ -2662,10 +2667,10 @@ function goalsHome(){
   const R=buildRecords(S.sessions,true);
   return '<section class="card stack"><h2>Objectifs de l’hiver</h2>'+g.map(x=>{const c=goalCur(x,R),pc=Math.min(100,c/x.t*100),ok=c>=x.t;return '<div class="vb"><div class="vb-l"><span>'+esc(x.n)+'</span><b>'+(ok?'Atteint ✓ · ':'')+fmt(c)+' / '+fmt(x.t)+' '+goalUnit(x)+'</b></div><div class="vb-t"><i style="width:'+pc.toFixed(1)+'%;background:'+(ok?'var(--ye)':'var(--accent)')+'"></i></div></div>'}).join('')+'</section>';
 }
-function setTheme(id){const old=S.prefs.theme||{};S.prefs.theme={id,custom:old.custom};if(id==='custom'&&!S.prefs.theme.custom){const b=themeBase();S.prefs.theme.custom={bg:b.bg,surface:b.surface,ink:b.ink,accent:b.accent,from:THEMES[old.id]?old.id:'dr'}}applyTheme();savePrefs();render()}
+function setTheme(id){const old=S.prefs.theme||{},b=themeBase();S.prefs.theme={id,custom:old.custom};if(id==='custom'&&!S.prefs.theme.custom){S.prefs.theme.custom={bg:b.bg,surface:b.surface,ink:b.ink,accent:b.accent,from:THEMES[old.id]?old.id:DEF}}applyTheme();savePrefs();render()}
 function themePlus(){
-  const t=S.prefs.theme||{id:'dr'},id=t.id||'dr',cu=Object.assign({},themeBase(),t.custom||{}),fr=THEMES[(t.custom&&t.custom.from)||'dr']||THEMES.dr;
-  const pv=id==='custom'?cu:(THEMES[id]||THEMES.dr);
+  const t=S.prefs.theme||{id:DEF},id=t.id||DEF,cu=Object.assign({},themeBase(),t.custom||{}),fr=THEMES[(t.custom&&t.custom.from)||DEF]||THEMES[DEF];
+  const pv=id==='custom'?cu:(THEMES[id]||THEMES[DEF]);
   const prev='<span class="tp" style="background:'+pv.bg+';border-color:'+mixc(pv.bg,pv.ink,.25)+'"><i style="background:'+pv.surface+'"></i><b style="background:'+pv.accent+'"></b></span>';
   const sw=Object.keys(THEMES).map(k=>{const q=THEMES[k];return '<button class="tsw" data-act="theme" data-id="'+k+'" aria-pressed="'+(k===id)+'" aria-label="'+esc(q.n)+'" style="background:'+q.bg+';border-color:'+(k===id?q.accent:mixc(q.bg,q.ink,.25))+'"><i style="background:'+q.surface+'"></i><b style="background:'+q.accent+'"></b></button>'}).join('');
   const pk=(k,l)=>{const same=String(cu[k]).toLowerCase()===String(fr[k]).toLowerCase();return '<div class="cpick"><span>'+l+'</span><span class="cr"><input type="color" data-act="theme-c" data-k="'+k+'" value="'+cu[k]+'" aria-label="Couleur : '+l+'"><button data-act="theme-r" data-k="'+k+'" aria-label="Rétablir la couleur d’origine : '+l+'"'+(same?' disabled':'')+'>↺</button></span></div>'};
@@ -3473,7 +3478,7 @@ document.addEventListener('click',ev=>{
     case 'mood':if(a){a.mood=a.mood===t.dataset.v?'':t.dataset.v;applyMood(a);persistActive();render()}break;
     case 'theme':setTheme(t.dataset.id);break
     case 'theme-adv':S.themeAdv=!(S.themeAdv||(S.prefs.theme||{}).id==='custom'&&S.themeAdv!==false);render();break
-    case 'theme-r':{const th=S.prefs.theme;if(th&&th.id==='custom'&&th.custom){const fr=THEMES[th.custom.from||'dr']||THEMES.dr;th.custom=Object.assign({},th.custom,{[t.dataset.k]:fr[t.dataset.k]});applyTheme();savePrefs();render()}break}
+    case 'theme-r':{const th=S.prefs.theme;if(th&&th.id==='custom'&&th.custom){const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];th.custom=Object.assign({},th.custom,{[t.dataset.k]:fr[t.dataset.k]});applyTheme();savePrefs();render()}break}
     case 'goal-step':{const g=(S.prefs.goals||[])[i];if(g){g.t=Math.max(1,Math.round((g.t+ +t.dataset.v*(g.u==='kg'?2.5:1))*100)/100);savePrefs();render()}break}
     case 'goal-del':{const k='gdel'+i;if(S.confirm===k){S.prefs.goals.splice(i,1);S.confirm=null;savePrefs();render()}else ask(k);break}
     case 'goal-add':goalAdd();break;
@@ -3534,7 +3539,7 @@ document.addEventListener('input',ev=>{
 });
 document.addEventListener('input',ev=>{
   const t=ev.target;
-  if(t&&t.dataset&&t.dataset.act==='theme-c'){const th=S.prefs.theme;if(th&&th.id==='custom'){th.custom=Object.assign({},th.custom,{[t.dataset.k]:t.value});applyTheme();savePrefs();const rb=t.parentNode&&t.parentNode.querySelector('[data-act=theme-r]');if(rb){const fr=THEMES[th.custom.from||'dr']||THEMES.dr;rb.disabled=String(t.value).toLowerCase()===String(fr[t.dataset.k]).toLowerCase()}}}
+  if(t&&t.dataset&&t.dataset.act==='theme-c'){const th=S.prefs.theme;if(th&&th.id==='custom'){th.custom=Object.assign({},th.custom,{[t.dataset.k]:t.value});applyTheme();savePrefs();const rb=t.parentNode&&t.parentNode.querySelector('[data-act=theme-r]');if(rb){const fr=THEMES[th.custom.from||DEF]||THEMES[DEF];rb.disabled=String(t.value).toLowerCase()===String(fr[t.dataset.k]).toLowerCase()}}}
 });
 document.addEventListener('input',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
