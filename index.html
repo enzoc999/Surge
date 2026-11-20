@@ -885,6 +885,7 @@ body.rm .hero-body svg,body.rm #restbar.low .time,body.rm #app.enter .tl,body.rm
 .aerr{min-height:20px;color:#ff8a8a;font-size:13.5px}
 .abtn{height:52px;border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:16px}
 .abtn:disabled{opacity:.6}
+.aerr.ok{color:var(--ink)}
 .alink{background:none;border:0;color:var(--ink-2);font-size:14px;padding:8px;text-decoration:underline}
 
 /* ---- intro ---- */
@@ -1658,37 +1659,72 @@ function sbMsg(m){
   if(/confirm/i.test(m))return 'Confirme ton e-mail avant de te connecter.';
   return m||'Erreur inconnue.';
 }
-function authScreen(m0){
+function authScreen(m0,notice){
   return new Promise(res=>{
-    let mode=m0||'in',busy=false,gn=0,gt=0;
+    let mode=m0||'in',busy=false,gn=0,gt=0,em='';
     const el=document.createElement('div');el.id='auth';
     const aIn=()=>{const f=el.querySelector('form');if(!f)return;const t0=performance.now(),c=rmSys();f.style.opacity=0;const st=n=>{const p=Math.min(1,(n-t0)/420),e=1-Math.pow(1-p,3);f.style.opacity=e.toFixed(3);f.style.transform=c?'none':'translate3d(0,'+(16*(1-e)).toFixed(1)+'px,0)';if(p<1&&el.isConnected)requestAnimationFrame(st)};requestAnimationFrame(st)};
     const aOut=cb=>{const t0=performance.now();const st=n=>{const p=Math.min(1,(n-t0)/260);el.style.opacity=(1-p).toFixed(3);if(p<1)requestAnimationFrame(st);else cb()};requestAnimationFrame(st)};
-    const paint=()=>{
-      el.innerHTML='<form class="aform" novalidate><h1>SURGE</h1><p class="asub">'+(mode==='in'?'Connecte-toi pour retrouver tes séances.':'Crée ton compte pour sauvegarder tes séances.')+'</p>'+
-        '<input id="a-mail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="E-mail" required>'+
-        '<input id="a-pass" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="Mot de passe (6 caractères min.)" required>'+
-        '<div class="aerr" id="a-err" role="alert"></div>'+
-        '<button class="abtn" type="submit">'+(mode==='in'?'Se connecter':'Créer mon compte')+'</button>'+
-        '<button class="alink" type="button" id="a-sw">'+(mode==='in'?'Pas de compte ? Créer un compte':'Déjà un compte ? Se connecter')+'</button></form>';
-      const f=el.querySelector('form'),er=el.querySelector('#a-err');
+    const SUB={in:'Connecte-toi pour retrouver tes séances.',up:'Crée ton compte pour sauvegarder tes séances.',forgot:'Entre ton e-mail, on t’envoie un lien pour choisir un nouveau mot de passe.'};
+    const paint=(msg,ok)=>{
+      el.innerHTML='<form class="aform" novalidate><h1>SURGE</h1><p class="asub">'+SUB[mode]+'</p>'+
+        '<input id="a-mail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" placeholder="E-mail" required value="'+esc(em)+'">'+
+        (mode==='forgot'?'':'<input id="a-pass" type="password" autocomplete="'+(mode==='in'?'current-password':'new-password')+'" placeholder="Mot de passe (6 caractères min.)" required>')+
+        '<div class="aerr'+(ok?' ok':'')+'" id="a-err" role="alert">'+esc(msg||'')+'</div>'+
+        '<button class="abtn" type="submit">'+(mode==='in'?'Se connecter':mode==='up'?'Créer mon compte':'Envoyer le lien')+'</button>'+
+        (mode==='in'?'<button class="alink" type="button" id="a-fg">Mot de passe oublié ?</button>':'')+
+        '<button class="alink" type="button" id="a-sw">'+(mode==='in'?'Pas de compte ? Créer un compte':mode==='up'?'Déjà un compte ? Se connecter':'Retour à la connexion')+'</button></form>';
+      const f=el.querySelector('form'),er=el.querySelector('#a-err'),mi=el.querySelector('#a-mail');
+      mi.oninput=()=>{em=mi.value};
       el.querySelector('h1').onclick=()=>{const t=Date.now();gn=t-gt<1500?gn+1:1;gt=t;if(gn>=5){el.remove();res({guest:true})}};
-      el.querySelector('#a-sw').onclick=()=>{mode=mode==='in'?'up':'in';paint();aIn()};
+      el.querySelector('#a-sw').onclick=()=>{mode=mode==='up'?'in':mode==='in'?'up':'in';paint();aIn()};
+      const fg=el.querySelector('#a-fg');if(fg)fg.onclick=()=>{mode='forgot';paint();aIn()};
       f.onsubmit=async ev=>{
         ev.preventDefault();if(busy)return;
-        const email=el.querySelector('#a-mail').value.trim(),password=el.querySelector('#a-pass').value;
-        if(!email||!password){er.textContent='Renseigne ton e-mail et ton mot de passe.';return}
+        const email=mi.value.trim();em=email;const pw=el.querySelector('#a-pass');const password=pw?pw.value:'';
+        if(!email||(mode!=='forgot'&&!password)){er.className='aerr';er.textContent=mode==='forgot'?'Renseigne ton e-mail.':'Renseigne ton e-mail et ton mot de passe.';return}
         busy=true;er.textContent='';const b=el.querySelector('.abtn');b.disabled=true;b.textContent='…';
+        const lab=mode==='in'?'Se connecter':mode==='up'?'Créer mon compte':'Envoyer le lien';
         try{
+          if(mode==='forgot'){
+            await sbAuth('recover',{email});
+            busy=false;b.disabled=false;b.textContent=lab;er.className='aerr ok';er.textContent='E-mail envoyé. Ouvre le lien reçu pour choisir un nouveau mot de passe.';return;
+          }
           let j=await sbAuth(mode==='in'?'token?grant_type=password':'signup',{email,password});
           let ss=sbFix(j);
           if(!ss&&mode==='up'){j=await sbAuth('token?grant_type=password',{email,password});ss=sbFix(j)}
           if(!ss)throw new Error('confirm');
           sbs.set(ss);aOut(()=>{el.remove();res(ss)});
-        }catch(e){er.textContent=sbMsg(e.message);busy=false;b.disabled=false;b.textContent=mode==='in'?'Se connecter':'Créer mon compte'}
+        }catch(e){er.className='aerr';er.textContent=sbMsg(e.message);busy=false;b.disabled=false;b.textContent=lab}
       };
+      if(msg){}
     };
-    paint();document.body.appendChild(el);aIn();
+    paint(notice,false);document.body.appendChild(el);aIn();
+  });
+}
+function newPassScreen(tok){
+  return new Promise(res=>{
+    let busy=false;
+    const el=document.createElement('div');el.id='auth';
+    el.innerHTML='<form class="aform" novalidate><h1>SURGE</h1><p class="asub">Choisis ton nouveau mot de passe.</p>'+
+      '<input id="a-pass" type="password" autocomplete="new-password" placeholder="Nouveau mot de passe (6 caractères min.)" required>'+
+      '<div class="aerr" id="a-err" role="alert"></div><button class="abtn" type="submit">Enregistrer</button></form>';
+    document.body.appendChild(el);
+    const f=el.querySelector('form'),er=el.querySelector('#a-err');
+    f.onsubmit=async ev=>{
+      ev.preventDefault();if(busy)return;
+      const password=el.querySelector('#a-pass').value;
+      if(!password){er.textContent='Renseigne un mot de passe.';return}
+      busy=true;er.textContent='';const b=el.querySelector('.abtn');b.disabled=true;b.textContent='…';
+      try{
+        const r=await fetch(SB_URL+'/auth/v1/user',{method:'PUT',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok.access_token,'Content-Type':'application/json'},body:JSON.stringify({password})});
+        let j={};try{j=await r.json()}catch(e){}
+        if(!r.ok)throw new Error(j.msg||j.error_description||j.message||('Erreur '+r.status));
+        const ss=sbFix({access_token:tok.access_token,refresh_token:tok.refresh_token,expires_in:+tok.expires_in||3600,user:j});
+        if(!ss)throw new Error('Erreur');
+        sbs.set(ss);el.remove();res(ss);
+      }catch(e){er.textContent=sbMsg(e.message);busy=false;b.disabled=false;b.textContent='Enregistrer'}
+    };
   });
 }
 function makeAdapter(uid){
@@ -1717,9 +1753,14 @@ function makeAdapter(uid){
   return{doc,collection};
 }
 async function hostedDb(){
-  let ss=sbs.get();
-  if(ss){const t=await sbToken();if(!t)ss=null}
-  if(!ss){const ia=await introFlow();ss=await authScreen(ia?'up':'in');if(ss&&ss.guest){S.guest=true;try{localStorage.setItem('wk_uid','guest')}catch(e){}return null}}
+  let ss=null,rec=null,recErr='';
+  try{const h=location.hash||'';
+    if(/type=recovery/.test(h)&&/access_token=/.test(h)){const q=new URLSearchParams(h.slice(1));rec={access_token:q.get('access_token'),refresh_token:q.get('refresh_token'),expires_in:q.get('expires_in')};history.replaceState(null,'',location.pathname+location.search)}
+    else if(/error_code=|error=access_denied/.test(h)){recErr='Lien expiré ou déjà utilisé. Redemande-en un.';history.replaceState(null,'',location.pathname+location.search)}
+  }catch(e){}
+  if(rec)ss=await newPassScreen(rec);
+  else{ss=sbs.get();if(ss){const t=await sbToken();if(!t)ss=null}}
+  if(!ss){const ia=recErr?null:await introFlow();ss=await authScreen(recErr?'forgot':(ia?'up':'in'),recErr);if(ss&&ss.guest){S.guest=true;try{localStorage.setItem('wk_uid','guest')}catch(e){}return null}}
   const uid=ss.user&&ss.user.id;if(!uid)return null;
   try{const last=localStorage.getItem('wk_uid');if(last!==uid){if(last){Object.keys(localStorage).filter(k=>k.indexOf('wk_')===0).forEach(k=>localStorage.removeItem(k))}localStorage.setItem('wk_uid',uid);if(last){location.reload();return null}}}catch(e){}
   S.user={id:uid,email:(ss.user&&ss.user.email)||''};
