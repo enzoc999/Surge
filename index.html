@@ -1660,7 +1660,7 @@ function sbMsg(m){
 }
 function authScreen(m0){
   return new Promise(res=>{
-    let mode=m0||'in',busy=false;
+    let mode=m0||'in',busy=false,gn=0,gt=0;
     const el=document.createElement('div');el.id='auth';
     const aIn=()=>{const f=el.querySelector('form');if(!f)return;const t0=performance.now(),c=rmSys();f.style.opacity=0;const st=n=>{const p=Math.min(1,(n-t0)/420),e=1-Math.pow(1-p,3);f.style.opacity=e.toFixed(3);f.style.transform=c?'none':'translate3d(0,'+(16*(1-e)).toFixed(1)+'px,0)';if(p<1&&el.isConnected)requestAnimationFrame(st)};requestAnimationFrame(st)};
     const aOut=cb=>{const t0=performance.now();const st=n=>{const p=Math.min(1,(n-t0)/260);el.style.opacity=(1-p).toFixed(3);if(p<1)requestAnimationFrame(st);else cb()};requestAnimationFrame(st)};
@@ -1672,6 +1672,7 @@ function authScreen(m0){
         '<button class="abtn" type="submit">'+(mode==='in'?'Se connecter':'Créer mon compte')+'</button>'+
         '<button class="alink" type="button" id="a-sw">'+(mode==='in'?'Pas de compte ? Créer un compte':'Déjà un compte ? Se connecter')+'</button></form>';
       const f=el.querySelector('form'),er=el.querySelector('#a-err');
+      el.querySelector('h1').onclick=()=>{const t=Date.now();gn=t-gt<1500?gn+1:1;gt=t;if(gn>=5){el.remove();res({guest:true})}};
       el.querySelector('#a-sw').onclick=()=>{mode=mode==='in'?'up':'in';paint();aIn()};
       f.onsubmit=async ev=>{
         ev.preventDefault();if(busy)return;
@@ -1718,7 +1719,7 @@ function makeAdapter(uid){
 async function hostedDb(){
   let ss=sbs.get();
   if(ss){const t=await sbToken();if(!t)ss=null}
-  if(!ss){const ia=await introFlow();ss=await authScreen(ia?'up':'in')}
+  if(!ss){const ia=await introFlow();ss=await authScreen(ia?'up':'in');if(ss&&ss.guest){S.guest=true;try{localStorage.setItem('wk_uid','guest')}catch(e){}return null}}
   const uid=ss.user&&ss.user.id;if(!uid)return null;
   try{const last=localStorage.getItem('wk_uid');if(last!==uid){if(last){Object.keys(localStorage).filter(k=>k.indexOf('wk_')===0).forEach(k=>localStorage.removeItem(k))}localStorage.setItem('wk_uid',uid);if(last){location.reload();return null}}}catch(e){}
   S.user={id:uid,email:(ss.user&&ss.user.email)||''};
@@ -1729,12 +1730,18 @@ async function hostedLogout(){
   try{Object.keys(localStorage).filter(k=>k.indexOf('wk_')===0).forEach(k=>localStorage.removeItem(k))}catch(e){}
   location.reload();
 }
+
+function guestInit(){
+  try{const iv=JSON.parse(localStorage.getItem('wk_intro')||'null');if(iv){if(iv.name&&!S.prefs.name)S.prefs.name=iv.name;S.prefs.intro=iv;if(!S.prefs.progSet&&iv.goal&&iv.sel&&iv.sel.length){S.prefs.plan=PL.gen(iv.goal,iv.lv||'d',iv.sel);S.prefs.progSet='plan'}localStorage.removeItem('wk_intro')}}catch(e){}
+  S.prefs.migr='r1';savePrefs();
+  if(!S.prefs.progSet&&!S.sessions.length)S.needProg=true;
+}
 async function initDb(){
   S.owner=false;
   let db=null;
   try{db=await hostedDb()}catch(e){db=null}
   S.db=db;
-  if(!db){S.dbState='local';migrateReal();softRender();return}
+  if(!db){S.dbState='local';if(S.guest)guestInit();else migrateReal();softRender();return}
   const slow=setTimeout(()=>{if(S.dbState==='loading'){S.dbState='slow';softRender()}},10000);
   try{
     db.collection('sessions').orderBy('startedAt','desc').limit(500).onSnapshot(snap=>{
